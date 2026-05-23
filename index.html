@@ -406,7 +406,15 @@ ${selectedTime ? `使える時間は「${selectedTime}」なので、それに�
     const rc = document.getElementById('resultCard');
     rc.classList.add('show');
     document.getElementById('resultTitle').textContent = `${selectedGrade} 今日の練習メニュー`;
-    document.getElementById('resultBody').textContent = (data.text || '').replace(/\*\*(.*?)\*\*/g, '$1');
+    let text = (data.text || '');
+    // Markdown → HTML変換
+    text = text
+      .replace(/^### (.+)$/gm, '<strong style="font-size:13px;color:var(--muted);">$1</strong>')
+      .replace(/^## (.+)$/gm, '<strong style="font-size:15px;color:var(--pink-d);">$1</strong>')
+      .replace(/^# (.+)$/gm, '<strong style="font-size:15px;color:var(--pink-d);">$1</strong>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>');
+    document.getElementById('resultBody').innerHTML = text;
   } catch (err) {
     document.getElementById('loadingArea').classList.remove('show');
     document.getElementById('resultCard').classList.add('show');
