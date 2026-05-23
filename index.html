@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏠 親子家事トレーニングAI</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --pink:#FF6B9D;--yellow:#FFD93D;--mint:#6BCB77;--sky:#4ECDC4;
+  --purple:#C77DFF;--orange:#FF9A3C;--coral:#FF6B6B;
+  --bg:#FFF8F0;--white:#FFFFFF;--text:#3D2C35;
+  --shadow:0 8px 32px rgba(255,107,157,.15);
+  --r:20px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Zen Maru Gothic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:3rem}
+
+.header{background:linear-gradient(135deg,#FF6B9D 0%,#C77DFF 50%,#4ECDC4 100%);padding:1.5rem 1rem 1rem;text-align:center;position:relative;overflow:hidden}
+.header::before{content:'✨';position:absolute;top:10px;left:15px;font-size:1.5rem;animation:spin 4s linear infinite}
+.header::after{content:'🌟';position:absolute;top:10px;right:15px;font-size:1.5rem;animation:spin 4s linear infinite reverse}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.header-title{font-family:'Nunito',sans-serif;font-size:clamp(1.3rem,5vw,1.8rem);font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.2);margin-bottom:4px}
+.header-sub{font-size:.8rem;color:rgba(255,255,255,.9)}
+
+.main{max-width:480px;margin:0 auto;padding:1.25rem 1rem}
+
+.card{background:var(--white);border-radius:var(--r);padding:1.25rem;box-shadow:var(--shadow);margin-bottom:1.2rem}
+.card-title{font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:.9rem;display:flex;align-items:center;gap:6px}
+.card-title .emoji{font-size:1.2rem}
+
+.select-group{display:flex;flex-wrap:wrap;gap:8px}
+.sel-btn{border:2px solid #eee;border-radius:30px;padding:7px 16px;font-size:.82rem;font-family:'Zen Maru Gothic',sans-serif;background:#fff;cursor:pointer;transition:all .2s;font-weight:500;color:var(--text)}
+.sel-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.sel-btn.active{border-color:transparent;color:#fff;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+
+.grade-group .sel-btn.active{background:linear-gradient(135deg,var(--pink),var(--purple))}
+.mood-group .sel-btn.active{background:linear-gradient(135deg,var(--sky),var(--mint))}
+.time-group .sel-btn.active{background:linear-gradient(135deg,var(--orange),var(--yellow))}
+
+.gen-btn{width:100%;padding:1rem;background:linear-gradient(135deg,var(--pink),var(--purple));border:none;border-radius:var(--r);font-size:1rem;font-weight:700;font-family:'Zen Maru Gothic',sans-serif;color:#fff;cursor:pointer;box-shadow:0 6px 20px rgba(255,107,157,.35);transition:all .2s;letter-spacing:.03em}
+.gen-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 28px rgba(255,107,157,.4)}
+.gen-btn:disabled{opacity:.65;cursor:not-allowed;transform:none}
+
+.result{display:none;background:linear-gradient(135deg,#fff8ff,#f0fff8);border:2px solid var(--pink);border-radius:var(--r);padding:1.25rem;box-shadow:var(--shadow)}
+.result.show{display:block;animation:fadeUp .4s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.result-header{display:flex;align-items:center;gap:8px;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1.5px dashed #ffd6e8}
+.result-header .icon{font-size:1.6rem}
+.result-header h3{font-size:.95rem;font-weight:700;color:var(--pink)}
+.result-body{font-size:.88rem;line-height:1.9;white-space:pre-wrap;color:var(--text)}
+
+.loading{display:none;text-align:center;padding:1.5rem}
+.loading.show{display:block}
+.dots span{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 3px;animation:bounce .8s infinite alternate}
+.dots span:nth-child(1){background:var(--pink);animation-delay:0s}
+.dots span:nth-child(2){background:var(--purple);animation-delay:.15s}
+.dots span:nth-child(3){background:var(--sky);animation-delay:.3s}
+@keyframes bounce{to{transform:translateY(-8px)}}
+.loading p{font-size:.82rem;color:var(--text);margin-top:.6rem;opacity:.7}
+
+.retry-btn{width:100%;padding:.8rem;background:#fff;border:2px solid var(--pink);border-radius:var(--r);font-size:.88rem;font-weight:700;font-family:'Zen Maru Gothic',sans-serif;color:var(--pink);cursor:pointer;margin-top:.8rem;transition:all .2s}
+.retry-btn:hover{background:var(--pink);color:#fff}
+
+.footer{text-align:center;font-size:.72rem;color:#aaa;margin-top:1.5rem;line-height:1.8}
+
+.warn{background:#fff8e1;border:1.5px solid var(--yellow);border-radius:12px;padding:.75rem 1rem;font-size:.78rem;color:#7a6010;margin-bottom:1rem;line-height:1.7}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">🏠 親子家事トレーニングAI</div>
+  <div class="header-sub">子供の今日の様子にぴったりの家事を提案します♪</div>
+</div>
+
+<div class="main">
+
+  <div class="warn">⚡ ニコの片付け習慣術 特典アプリ｜AIが今日の家事をご提案します！</div>
+
+  <!-- 学年 -->
+  <div class="card">
+    <div class="card-title"><span class="emoji">🎒</span>学年を選んでね</div>
+    <div class="select-group grade-group" id="gradeGroup">
+      <button class="sel-btn" data-val="小学1〜2年生">小1〜2年</button>
+      <button class="sel-btn" data-val="小学3〜4年生">小3〜4年</button>
+      <button class="sel-btn" data-val="小学5〜6年生">小5〜6年</button>
+      <button class="sel-btn" data-val="中学1年生">中1</button>
+      <button class="sel-btn" data-val="中学2年生">中2</button>
+      <button class="sel-btn" data-val="中学3年生">中3</button>
+    </div>
+  </div>
+
+  <!-- 今日の様子 -->
+  <div class="card">
+    <div class="card-title"><span class="emoji">💭</span>今日の子供の様子は？</div>
+    <div class="select-group mood-group" id="moodGroup">
+      <button class="sel-btn" data-val="元気いっぱい">😄 元気いっぱい</button>
+      <button class="sel-btn" data-val="普通・まあまあ">😊 普通・まあまあ</button>
+      <button class="sel-btn" data-val="疲れ気味">😴 疲れ気味</button>
+      <button class="sel-btn" data-val="機嫌が悪い">😤 機嫌が悪い</button>
+      <button class="sel-btn" data-val="テスト前でピリピリ">📚 テスト前</button>
+      <button class="sel-btn" data-val="部活で疲れている">⚽ 部活疲れ</button>
+    </div>
+  </div>
+
+  <!-- 時間 -->
+  <div class="card">
+    <div class="card-title"><span class="emoji">⏰</span>使える時間は？</div>
+    <div class="select-group time-group" id="timeGroup">
+      <button class="sel-btn" data-val="5分以内">5分以内</button>
+      <button class="sel-btn" data-val="10分くらい">10分</button>
+      <button class="sel-btn" data-val="15〜20分">15〜20分</button>
+      <button class="sel-btn" data-val="30分以上">30分以上</button>
+    </div>
+  </div>
+
+  <button class="gen-btn" id="genBtn" onclick="generate()">
+    🌟 今日の家事を提案してもらう！
+  </button>
+
+  <div class="loading" id="loading">
+    <div class="dots"><span></span><span></span><span></span></div>
+    <p>ぴったりの家事を考えています…</p>
+  </div>
+
+  <div class="result" id="result">
+    <div class="result-header">
+      <span class="icon">🎉</span>
+      <h3>今日のおすすめ家事はこちら！</h3>
+    </div>
+    <div class="result-body" id="resultBody"></div>
+    <button class="retry-btn" onclick="retry()">🔄 別の提案を見る</button>
+  </div>
+
+</div>
+
+<div class="footer">
+  <p>親子家事トレーニングAI｜ニコの片付け習慣術 特典<br>
+  © ニコ｜lit.link/niko_strategy</p>
+</div>
+
+<script>
+const state = { grade:'', mood:'', time:'' };
+
+document.querySelectorAll('.select-group').forEach(group => {
+  group.querySelectorAll('.sel-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      group.querySelectorAll('.sel-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const id = group.id;
+      if(id === 'gradeGroup') state.grade = btn.dataset.val;
+      if(id === 'moodGroup')  state.mood  = btn.dataset.val;
+      if(id === 'timeGroup')  state.time  = btn.dataset.val;
+    });
+  });
+});
+
+async function generate() {
+  if(!state.grade || !state.mood || !state.time) {
+    alert('学年・様子・時間をすべて選んでね！');
+    return;
+  }
+
+  document.getElementById('genBtn').disabled = true;
+  document.getElementById('result').classList.remove('show');
+  document.getElementById('loading').classList.add('show');
+
+  const prompt = `あなたは子供の家事教育を専門とするアドバイザーです。
+以下の条件の子供に合った家事を提案してください。
+
+【子供の情報】
+学年：${state.grade}
+今日の様子：${state.mood}
+使える時間：${state.time}
+
+【出力形式】
+以下の形式で出力してください：
+
+🏠 今日のおすすめ家事：【家事名】
+
+📝 やり方（3〜4ステップ）
+① 
+② 
+③ 
+
+⏱ 目安時間：
+
+💬 声かけのコツ
+（この学年・この様子の子供への効果的な声かけ方法）
+
+✨ できたら褒めよう！
+（具体的な褒め言葉の例）
+
+🌱 次のステップ
+（もう少しできるようになったら挑戦できること）
+
+学年に合った難易度で、今日の様子を考慮した現実的な提案をしてください。小学生には特にわかりやすいステップで。`;
+
+  try {
+    const response = await fetch('/.netlify/functions/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'エラーが発生しました');
+    }
+
+    document.getElementById('resultBody').textContent = data.text;
+    document.getElementById('result').classList.add('show');
+  } catch(e) {
+    document.getElementById('resultBody').textContent = `エラーが発生しました。\n${e.message}\n\nしばらく経ってからもう一度お試しください。`;
+    document.getElementById('result').classList.add('show');
+  }
+
+  document.getElementById('loading').classList.remove('show');
+  document.getElementById('genBtn').disabled = false;
+  document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function retry() {
+  document.getElementById('result').classList.remove('show');
+  generate();
+}
+</script>
+</body>
+</html>
