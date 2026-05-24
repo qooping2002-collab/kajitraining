@@ -239,9 +239,7 @@ function md2html(text) {
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/^[\-\*] (.+)$/gm, '<li>$1</li>')
     .replace(/(<li>[\s\S]*<\/li>)/, '<ul>$1</ul>')
-    .replace(/
-
-/g, '</p><p>')
+    .replace(/\n\n/g, '</p><p>')
     .replace(/^(?!<[hul])/gm, '')
     .trim();
 }
