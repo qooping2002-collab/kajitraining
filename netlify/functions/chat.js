@@ -4,7 +4,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { prompt } = JSON.parse(event.body);
+    const body = JSON.parse(event.body);
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -14,29 +14,27 @@ exports.handler = async (event) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1000,
-        system: `あなたは整理収納アドバイザーのニコが考案した「親子片付け習慣メソッド」をベースに回答する家事トレーニングの専門家です。以下の考え方を必ず反映してください。
-・片付けが続かないのはやる気の問題ではなく「仕組みがないから」
-・1日5分・小さい範囲からスタート・一気にやらない
-・定位置を決めてラベルを貼る・子供の目線の高さに配置する
-・「できた！」を見逃さず褒める・結果だけでなく過程も認める
-・週4日以上・6週間続けると習慣として脳に定着する
-・完璧より継続。ハードルを下げる・見える化・褒めて伸ばすの3つが習慣化のコツ`,
-        messages: [{ role: 'user', content: prompt }]
+        model: body.model || 'claude-haiku-4-5-20251001',
+        max_tokens: body.max_tokens || 1000,
+        system: body.system,
+        messages: body.messages
       })
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error?.message || 'APIエラー');
+      return {
+        statusCode: 500,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: JSON.stringify(data) })
+      };
     }
 
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: data.content?.[0]?.text || '' })
+      body: JSON.stringify(data)
     };
   } catch (e) {
     return {
