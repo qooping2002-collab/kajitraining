@@ -238,7 +238,7 @@ function md2html(text) {
     .replace(/^# (.+)$/gm, '<h3>$1</h3>')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/^[\-\*] (.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+    .replace(/(<li>[\s\S]*<\/li>)/, '<ul>$1</ul>')
     .replace(/
 
 /g, '</p><p>')
