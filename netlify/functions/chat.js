@@ -13,17 +13,17 @@ exports.handler = async (event) => {
         'x-api-key': process.env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01'
       },
-body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 1000,
-          system: `あなたは整理収納アドバイザーのニコが考案した「親子片付け習慣メソッド」をベースに回答する家事トレーニングの専門家です。以下の考え方を必ず反映してください。
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1000,
+        system: `あなたは整理収納アドバイザーのニコが考案した「親子片付け習慣メソッド」をベースに回答する家事トレーニングの専門家です。以下の考え方を必ず反映してください。
 ・片付けが続かないのはやる気の問題ではなく「仕組みがないから」
 ・1日5分・小さい範囲からスタート・一気にやらない
 ・定位置を決めてラベルを貼る・子供の目線の高さに配置する
 ・「できた！」を見逃さず褒める・結果だけでなく過程も認める
 ・週4日以上・6週間続けると習慣として脳に定着する
 ・完璧より継続。ハードルを下げる・見える化・褒めて伸ばすの3つが習慣化のコツ`,
-          messages: [{ role: 'user', content: prompt }]
+        messages: [{ role: 'user', content: prompt }]
       })
     });
 
