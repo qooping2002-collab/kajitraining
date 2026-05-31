@@ -52,6 +52,12 @@ textarea:focus,input[type=text]:focus{border-color:var(--pink)}
 .submit-btn:hover{opacity:0.9}
 .submit-btn:disabled{opacity:0.6;cursor:not-allowed}
 
+/* COUNTER */
+.usage-counter{text-align:center;font-size:0.78rem;color:var(--muted);margin-top:0.7rem}
+.usage-counter b{color:var(--pink-d);font-weight:700}
+.limit-msg{background:var(--purple-l);border-radius:12px;padding:0.9rem 1rem;margin-top:0.8rem;font-size:0.83rem;color:var(--purple);line-height:1.7;text-align:center}
+.limit-msg .limit-title{font-weight:700;margin-bottom:0.3rem}
+
 /* RESULT */
 .result-wrap{padding:0 1rem 2rem;display:none}
 .result-card{background:var(--card);border-radius:var(--radius);padding:1.3rem;box-shadow:0 2px 16px rgba(242,106,122,0.10)}
@@ -71,6 +77,7 @@ textarea:focus,input[type=text]:focus{border-color:var(--pink)}
 /* RETRY */
 .retry-btn{width:100%;background:#fff;color:var(--pink);border:2px solid var(--pink);border-radius:50px;padding:0.8rem;font-family:inherit;font-size:0.9rem;font-weight:700;cursor:pointer;margin-top:1rem;transition:all 0.2s}
 .retry-btn:hover{background:var(--pink-l)}
+.retry-btn:disabled{opacity:0.5;cursor:not-allowed;border-color:var(--muted);color:var(--muted)}
 
 /* LOADING */
 .loading{text-align:center;padding:2rem;color:var(--muted);font-size:0.9rem}
@@ -148,7 +155,12 @@ textarea:focus,input[type=text]:focus{border-color:var(--pink)}
     <textarea id="situation" rows="2" placeholder="例：急いでいる、やる気満々、料理が苦手　など"></textarea>
   </div>
 
-  <button class="submit-btn" onclick="submit()">✨ 今日の家事を提案してもらう！</button>
+  <button class="submit-btn" id="submitBtn" onclick="submit()">✨ 今日の家事を提案してもらう！</button>
+  <div class="usage-counter" id="usageCounter"></div>
+  <div class="limit-msg" id="limitMsg" style="display:none">
+    <div class="limit-title">🌙 今日はここまで！</div>
+    <div>今日の提案は終わりです。また明日、新しい家事にチャレンジしてね♪<br>（毎日5回まで使えます）</div>
+  </div>
 </div>
 
 <!-- 結果エリア -->
@@ -186,6 +198,59 @@ const gradeMap = {
   '小学生': ['小1','小2','小3','小4','小5','小6'],
   '中学生': ['中1','中2','中3']
 };
+
+/* ===== 1日の利用上限（毎日5回） ===== */
+const DAILY_LIMIT = 5;
+
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+
+function getUsedCount() {
+  try {
+    const raw = localStorage.getItem('kaji_usage');
+    if (!raw) return 0;
+    const obj = JSON.parse(raw);
+    if (obj.date !== todayKey()) return 0; // 日付が変わったらリセット
+    return obj.count || 0;
+  } catch(e) {
+    return 0;
+  }
+}
+
+function addUsedCount() {
+  let count = getUsedCount() + 1;
+  try {
+    localStorage.setItem('kaji_usage', JSON.stringify({date: todayKey(), count: count}));
+  } catch(e) {}
+  updateUsageUI();
+}
+
+function remaining() {
+  return Math.max(0, DAILY_LIMIT - getUsedCount());
+}
+
+function updateUsageUI() {
+  const rem = remaining();
+  const counter = document.getElementById('usageCounter');
+  const submitBtn = document.getElementById('submitBtn');
+  const limitMsg = document.getElementById('limitMsg');
+  const retryBtn = document.getElementById('retryBtn');
+
+  if (rem > 0) {
+    counter.innerHTML = `今日はあと <b>${rem}</b> 回つかえます`;
+    counter.style.display = 'block';
+    submitBtn.disabled = false;
+    limitMsg.style.display = 'none';
+    if (retryBtn) retryBtn.disabled = false;
+  } else {
+    counter.style.display = 'none';
+    submitBtn.disabled = true;
+    limitMsg.style.display = 'block';
+    if (retryBtn) retryBtn.disabled = true;
+  }
+}
 
 function switchGroup(group) {
   gradeGroup = group;
@@ -245,6 +310,7 @@ function md2html(text) {
 }
 
 async function submit() {
+  if (remaining() <= 0) { updateUsageUI(); return; }
   if (!selectedGrade) { alert('学年を選んでね！'); return; }
   if (!selectedMood) { alert('今日の様子を選んでね！'); return; }
   if (!selectedTime) { alert('使える時間を選んでね！'); return; }
@@ -296,9 +362,13 @@ ${situation ? `今日の状況：${situation}` : ''}
     const data = await res.json();
     const text = data.content?.[0]?.text || '';
 
+    // 成功したときだけ回数を消費
+    addUsedCount();
+
     document.getElementById('loadingArea').style.display = 'none';
     document.getElementById('resultCard').style.display = 'block';
     document.getElementById('retryBtn').style.display = 'block';
+    updateUsageUI();
 
     // 学年に応じてコツを変更
     document.getElementById('tipText').textContent = isJunior
@@ -317,6 +387,12 @@ ${situation ? `今日の状況：${situation}` : ''}
 }
 
 function retry() {
+  if (remaining() <= 0) { 
+    document.getElementById('resultWrap').style.display = 'none';
+    document.getElementById('formWrap').style.display = 'block';
+    updateUsageUI();
+    return; 
+  }
   document.getElementById('resultWrap').style.display = 'none';
   document.getElementById('formWrap').style.display = 'block';
 }
@@ -332,10 +408,12 @@ function reset() {
   switchGroup('小学生');
   document.getElementById('resultWrap').style.display = 'none';
   document.getElementById('formWrap').style.display = 'block';
+  updateUsageUI();
 }
 
 // 初期化
 renderGradeDetail();
+updateUsageUI();
 </script>
 </body>
 </html>
