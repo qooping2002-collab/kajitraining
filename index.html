@@ -344,7 +344,7 @@ ${situation ? `今日の状況：${situation}` : ''}
 ・所要時間の目安
 ・取り組み方のコツ（子供の年齢に合わせて）
 ・できたときの声かけ例
-を含めて、親しみやすい文体で提案してください。`;
+を含めて、親しみやすい文体で提案してください。なお、表（テーブル）は使わず、すべて箇条書きで答えてください。`;
 
   try {
     const res = await fetch('/.netlify/functions/chat', {
@@ -352,7 +352,7 @@ ${situation ? `今日の状況：${situation}` : ''}
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1000,
+        max_tokens: 2000,
         system: systemPrompt,
         messages: [{role:'user', content: userPrompt}]
       })
